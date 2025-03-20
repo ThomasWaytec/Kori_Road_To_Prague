@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Road to Prague</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.js"></script>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #000;
+            overflow: hidden;
+        }
+        canvas {
+            border: 2px solid white;
+        }
+        #deathOverlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            font-size: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            text-align: center;
+        }
+        #deathOverlay h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        #deathOverlay p {
+            font-size: 32px;
+            margin-bottom: 30px;
+        }
+        #deathOverlay button {
+            padding: 15px 30px;
+            font-size: 18px;
+            background-color: #ff69b4;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #deathOverlay button:hover {
+            background-color: #ff1493;
+        }
+    </style>
+</head>
+<body>
+
+<script>
+const config = {
+    type: Phaser.AUTO,
+    width: 480,  
+    height: 800,  
+    physics: { default: 'arcade', arcade: { debug: false } },
+    scene: { preload, create, update }
+};
+
+let car, road, obstacles, speed = 0, cursors, touchXStart = null, score = 0;
+let scoreText;
+let deathOverlay, finalScoreText;
+let gameOverFlag = false;  // Flag to track if the game is over
+let crashSound;  // Declare crash sound variable
+let carSound;    // Declare car sound variable
+let music;
+
+const game = new Phaser.Game(config);
+
+function preload() {
+    this.load.image('road', 'assets/road.png');  
+    this.load.image('car', 'assets/car_red.png');  
+    this.load.image('traffic1', 'assets/car_black.png');
+    this.load.image('traffic2', 'assets/car_yellow.png');
+    this.load.image('traffic3', 'assets/car_blue.png');
+    this.load.image('traffic4', 'assets/car_yellow.png');
+    this.load.audio('crash', 'assets/crash.mp3');  // Load crash sound
+    this.load.audio('car_sound', 'assets/car_sound.mp3');  // Load car sound
+    this.load.audio('music', 'assets/music.mp3')
+}
+
+function create() {
+    road = this.add.tileSprite(240, 400, 480, 800, 'road');
+    car = this.physics.add.sprite(240, 700, 'car').setScale(0.5).setCollideWorldBounds(true);
+        // Replace the previous scoreText creation line with the updated one
+    scoreText = this.add.text(config.width - 432, 100, `Score: ${score}`, { 
+        font: '32px "Comic Sans MS", sans-serif', 
+        fill: '#ffffff', 
+        stroke: '#ff69b4', 
+        strokeThickness: 4, 
+        shadow: { offsetX: 3, offsetY: 3, color: '#ff0000', blur: 5, fill: true }
+    });
+
+
+    cursors = this.input.keyboard.createCursorKeys();
+
+    this.input.on('pointerdown', (pointer) => {
+        touchXStart = pointer.x; 
+    });
+
+    this.input.on('pointerup', (pointer) => {
+        let swipeDistance = pointer.x - touchXStart;
+
+        if (swipeDistance < -30) {
+            moveLeft(); 
+        } else if (swipeDistance > 30) {
+            moveRight(); 
+        }
+    });
+
+    this.input.on('pointerdown', (pointer) => {
+        if (pointer.x < config.width / 2) {
+            moveLeft();  
+        } else {
+            moveRight();  
+        }
+    });
+
+    obstacles = this.physics.add.group();
+    this.time.addEvent({
+        delay: 1500,
+        callback: () => {
+            if (gameOverFlag) return; 
+            let xPosition = Phaser.Math.Between(200, 380);
+            let carTypes = ['traffic1', 'traffic2', 'traffic3', 'traffic4'];
+            let randomCar = carTypes[Phaser.Math.Between(0, carTypes.length - 1)];
+            let obstacle = obstacles.create(xPosition, -50, randomCar).setScale(0.5);
+            obstacle.setVelocityY(200 + speed * 5);
+        },
+        loop: true
+    });
+
+    this.physics.add.collider(car, obstacles, () => {
+        if (!gameOverFlag) {
+            gameOver();  
+            crashSound = this.sound.add('crash', {volume: 0.5 });
+            crashSound.play();
+        }
+    });
+
+    this.physics.world.on('worldbounds', () => {
+        if (car.x <= 140 || car.x >= config.width - 40) {
+            if (!gameOverFlag) {
+                gameOver();
+                crashSound = this.sound.add('crash', {volume: 0.5 });  
+                crashSound.play();  
+            }
+        }
+    });
+
+    deathOverlay = document.getElementById('deathOverlay');
+    finalScoreText = document.getElementById('finalScore');
+    carSound = this.sound.add('car_sound', { loop: true, volume: 1.5 });
+    carSound.play();
+
+    music = this.sound.add('music', { loop: true, volume: 0.7 });
+    music.play();
+}
+
+function update() {
+    if (gameOverFlag) return;
+
+    road.tilePositionY -= 5 + speed;
+    speed = Math.min(speed + 0.01, 10);
+
+    score += 0.1; 
+    scoreText.setText(`Score: ${Math.floor(score)}`);
+
+    if (cursors.left.isDown) moveLeft();
+    if (cursors.right.isDown) moveRight();
+
+    if (car.x <= 140 || car.x >= config.width - 40) {
+        if (!gameOverFlag) {
+            gameOver();
+            crashSound = this.sound.add('crash', {volume: 0.5 });  
+            crashSound.play();
+        }
+    }
+}
+
+function moveLeft() {
+    if (car.x > 30) { 
+        car.setVelocityX(-200);
+        car.angle = -10; 
+        setTimeout(() => car.angle = 0, 200);
+    }
+}
+
+function moveRight() {
+    if (car.x < config.width - 100) { 
+        car.setVelocityX(200);
+        car.angle = 10;  
+        setTimeout(() => car.angle = 0, 200);
+    }
+}
+
+function gameOver() {
+    gameOverFlag = true;  
+    game.scene.pause();
+
+    obstacles.getChildren().forEach(obstacle => {
+        obstacle.setVelocityY(0);  
+    });
+
+    finalScoreText.textContent = `Score: ${Math.floor(score)}`;
+    deathOverlay.style.display = 'flex';  
+}
+
+function restartGame() {
+    deathOverlay.style.display = 'none';
+    score = 0;
+    speed = 0;
+    car.setPosition(240, 700);
+    obstacles.clear(true, true); 
+    gameOverFlag = false;  
+    game.scene.restart();  
+}
+
+</script>
+
+<!-- Death Overlay HTML -->
+<div id="deathOverlay" style="display: none;">
+    <div>
+        <h1>Oof, you crashed!</h1>
+        <p id="finalScore">Score: 0</p>
+        <button onclick="restartGame()">Try Again?</button>
+    </div>
+</div>
+
+
+</body>
+</html>

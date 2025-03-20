@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Köri: Road to Prague</title>
+    <style>
+        /* General body styling */
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #000;
+            overflow: hidden;
+            flex-direction: column;
+            text-align: center;
+            font-family: 'Arial', sans-serif;
+            position: relative;
+        }
+
+        /* Background image */
+        .background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('assets/welcome.jpeg') no-repeat center center;
+            background-size: contain;  /* Adjusts image to fit fully */
+            background-position: center;
+            background-color: orange;  /* Orange background color where the image doesn't cover */
+            z-index: -1;
+        }
+
+        /* Title text styling with animation */
+        .title {
+            font-size: 12vw;  /* Scales with screen size */
+            font-weight: bold;
+            color: white;
+            text-shadow: 4px 4px 10px rgba(0, 0, 0, 0.8), 0 0 25px rgba(0, 0, 0, 1), 0 0 30px rgba(255, 0, 150, 0.6); /* Black and a bit of pink glow */
+            animation: bounce 1.5s ease infinite, glow 1.5s ease infinite;
+            transform: rotate(-5deg);  /* Slightly tilted */
+            position: absolute;
+            top: 10%;  /* Position text higher */
+            left: 50%;
+            transform: translateX(-50%) rotate(-5deg);  /* Center horizontally and tilt */
+        }
+
+        /* Button styling */
+        .start-button {
+            padding: 20px 40px;
+            font-size: 6vw;  /* Responsive button font size */
+            background-color: #ff69b4;
+            border: none;
+            border-radius: 15px;
+            color: white;
+            cursor: pointer;
+            position: absolute;
+            bottom: 18%;  /* Slightly higher button position */
+            left: 50%;
+            transform: translateX(-50%);
+            transition: background-color 0.3s, transform 0.3s;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 0, 0, 1), 0 0 30px rgba(255, 0, 150, 0.6); /* Black and a bit of pink glow */
+        }
+
+        .start-button:hover {
+            background-color: #ff1493;
+            transform: scale(1.1);  /* Scale effect on hover */
+        }
+
+        /* Shrink and grow animation */
+        @keyframes shrinkGrow {
+            0% { transform: scale(1) rotate(-5deg); }
+            50% { transform: scale(1.2) rotate(-5deg); }
+            100% { transform: scale(1) rotate(-5deg); }
+        }
+
+        /* Bounce animation for text */
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0) rotate(-5deg);
+            }
+            50% {
+                transform: translateY(-15px) rotate(-5deg);
+            }
+        }
+
+        /* Glow effect for text */
+        @keyframes glow {
+            0% {
+                text-shadow: 4px 4px 10px rgba(0, 0, 0, 0.8), 0 0 25px rgba(0, 0, 0, 1), 0 0 30px rgba(255, 0, 150, 0.6);
+            }
+            50% {
+                text-shadow: 4px 4px 20px rgba(0, 0, 0, 1), 0 0 30px rgba(0, 0, 0, 1), 0 0 40px rgba(255, 0, 150, 0.8);
+            }
+            100% {
+                text-shadow: 4px 4px 10px rgba(0, 0, 0, 0.8), 0 0 25px rgba(0, 0, 0, 1), 0 0 30px rgba(255, 0, 150, 0.6);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Background image -->
+    <div class="background"></div>
+
+    <!-- Title text -->
+    <div class="title">Köri: Road to Prague</div>
+
+    <!-- Start button -->
+    <button class="start-button" onclick="window.location.href='game.html'">Start!</button>
+
+</body>
+</html>
